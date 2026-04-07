@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CLASSIC CHESS | PREMIUM EDITION</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            /* Traditional Solid Chess Colors */
+            --board-light: #EBECD0;
+            --board-dark: #56958b;
+            --piece-white: #f4fefc;
+            --piece-black: #111111;
+            
+            --bg-color: #F3F4F6;
+            --panel-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --border-color: #E5E7EB;
+            
+            --highlight-selected: rgba(105, 246, 211, 0.6);
+            --highlight-move: rgba(0, 0, 0, 0.15);
+            --highlight-capture: rgba(0, 0, 0, 0.15);
+
+            /* Unified Cinzel Font Variable */
+            --font-main: 'Cinzel', serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            font-family: var(--font-main); height: 100vh; display: flex;
+            flex-direction: column; overflow: auto; user-select: none;
+            -webkit-font-smoothing: antialiased;
+            /* Enhanced background for better frosted glass effect */
+            background-image: 
+                radial-gradient(circle at 15% 10%, #FFFFFF 0%, transparent 40%),
+                radial-gradient(circle at 85% 90%, #E5E7EB 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, var(--bg-color) 0%, #d7d9defa 100%);
+        }
+        
+        .d-none { display: none !important; }
+
+        /* --- SCREEN TRANSITION LOGIC --- */
+        .screen {
+            position: fixed; inset: 0; z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: transparent;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            opacity: 1; transform: scale(1);
+        }
+        .screen.hidden-screen {
+            opacity: 0; pointer-events: none; z-index: -1;
+            transform: scale(0.98); 
+        }
+
+        /* --- LANDING ELEMENTS --- */
+        .hero-art { display: flex; gap: 15px; margin-bottom: 10px; }
+        .hero-piece {
+            font-size: clamp(4rem, 10vw, 6rem); line-height: 1;
+            text-shadow: 0 15px 20px rgba(0,0,0,0.15);
+            animation: floatPiece 4s ease-in-out infinite alternate;
+        }
+        .hero-piece.w { color: var(--piece-white); animation-delay: 0s; }
+        .hero-piece.b { color: var(--piece-black); animation-delay: -2s; }
+
+        @keyframes floatPiece {
+            0% { transform: translateY(0px) rotate(-2deg); }
+            100% { transform: translateY(-15px) rotate(2deg); }
+        }
+
+        .landing-title {
+            font-family: var(--font-main); 
+            font-size: clamp(4rem, 12vw, 6.5rem);
+            font-weight: 900; 
+            margin-bottom: 5px; color: var(--text-main); letter-spacing: -2px; 
+            text-align: center; text-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .landing-subtitle {
+            font-family: var(--font-main);
+            color: var(--text-muted); font-size: clamp(1.1rem, 3vw, 1.4rem); font-weight: 600; 
+            margin-bottom: 50px; text-align: center; max-width: 80%;
+        }
+
+        /* Initial Start Button Wrapper */
+        .menu-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 40px; border-radius: 24px;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1), inset 0 2px 5px rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.6);
+            width: 100%; max-width: 450px;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+        .menu-card.compact { max-width: 350px; }
+
+        .btn { 
+            background: #2C3E50; color: #FFFFFF; padding: 18px 25px; border-radius: 12px; border: none;
+            font-family: var(--font-main); font-size: 1.1rem; font-weight: 700; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.2); width: 100%;
+            letter-spacing: 1px;
+        }
+        .btn:hover { background: #1A252F; transform: translateY(-3px); box-shadow: 0 12px 20px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255,255,255,0.2); }
+        .btn:active { transform: translateY(0); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        .btn-outline { 
+            background: rgba(255,255,255,0.5); border: 1px solid var(--border-color); color: var(--text-main); 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .btn-outline:hover { background: rgba(255,255,255,0.9); border-color: var(--text-muted); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+
+        .divider {
+            width: 100%; height: 1px; background: rgba(0,0,0,0.1); margin: 15px 0; position: relative;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .divider span {
+            background: rgba(243, 244, 246, 0.8); backdrop-filter: blur(5px);
+            padding: 2px 15px; border-radius: 20px; color: var(--text-muted); 
+            font-family: var(--font-main); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* --- 3D FROSTED GLASS TOP BAR --- */
+        #game-ui { 
+            display: flex; flex-direction: column; height: 100vh; position: relative; z-index: 2; 
+            opacity: 0; transition: opacity 0.5s ease; 
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.65); 
+            backdrop-filter: blur(24px) saturate(150%); -webkit-backdrop-filter: blur(24px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 
+                0 15px 35px -5px rgba(0, 0, 0, 0.1), 
+                inset 0 2px 3px rgba(255, 255, 255, 0.9), 
+                inset 0 -3px 5px rgba(0, 0, 0, 0.04);
+            display: flex; justify-content: space-between; align-items: center; z-index: 10; 
+            width: 90%; max-width: 800px; margin: 25px auto 10px;
+            padding: 12px 40px; border-radius: 50px; flex-shrink: 0;
+        }
+
+        .header-logo { font-family: var(--font-main); font-weight: 900; font-size: 1.4rem; color: var(--text-main); letter-spacing: 1px; text-shadow: 0 2px 4px rgba(255,255,255,0.5);}
+
+        .status-container { display: flex; gap: 30px; }
+        .stat-box { display: flex; flex-direction: column; align-items: flex-end; }
+        .stat-label { font-family: var(--font-main); font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 2px; font-weight: 700;}
+        .stat-value { font-family: var(--font-main); font-size: clamp(1.1rem, 3vw, 1.4rem); font-weight: 800; color: var(--text-main); letter-spacing: 0.5px;}
+
+        /* --- LAYOUT: GRAVEYARDS & BOARD --- */
+        main { 
+            flex-grow: 1; display: flex; flex-direction: row; justify-content: center; align-items: center; 
+            position: relative; z-index: 5; padding: 10px 20px 30px; gap: 30px;
+        }
+
+        /* 3D FROSTED GLASS COLUMNS (GRAVEYARDS) */
+        .graveyard {
+            width: clamp(70px, 10vw, 100px); height: min(85vw, 75vh);
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(24px) saturate(150%); -webkit-backdrop-filter: blur(24px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 20px; 
+            box-shadow: 
+                0 15px 35px -5px rgba(0, 0, 0, 0.1), 
+                inset 0 2px 5px rgba(255, 255, 255, 0.9),
+                inset -2px 0 5px rgba(0,0,0,0.02);
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px 5px; position: relative; overflow: hidden;
+        }
+
+        .gy-title { font-family: var(--font-main); font-weight: 800; font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1.5px; text-shadow: 0 1px 2px rgba(255,255,255,0.8);}
+        .gy-content { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; width: 100%; height: 100%; overflow-y: auto; scrollbar-width: none; }
+        .gy-content::-webkit-scrollbar { display: none; }
+        
+        .gy-piece { 
+            font-size: clamp(2rem, 5vmin, 2.5rem); line-height: 0.8; 
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .gy-piece.w { color: var(--piece-white); text-shadow: 0 3px 5px rgba(0,0,0,0.2); }
+        .gy-piece.b { color: var(--piece-black); text-shadow: 0 3px 5px rgba(0,0,0,0.4); }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* THE BOARD */
+        .board-wrapper {
+            width: min(85vw, 80vh); height: min(85vw, 80vh); position: relative;
+            background: var(--board-dark); border: 8px solid #2C3E50;
+            border-radius: 8px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.25); 
+            flex-shrink: 0; overflow: hidden; z-index: 10;
+        }
+
+        .grid-layer { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); z-index: 3; }
+        .pieces-layer { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+
+        .cell { position: relative; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .cell.dark { background: var(--board-dark); }
+        .cell.light { background: var(--board-light); }
+
+        /* --- TRADITIONAL PIECES --- */
+        .piece { 
+            position: absolute; width: 12.5%; height: 12.5%; display: flex; justify-content: center; align-items: center;
+            font-size: clamp(2.5rem, 7vmin, 5rem); 
+            transition: left 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.15s, text-shadow 0.15s; 
+            z-index: 10; pointer-events: none; 
+            will-change: transform, left, top;
+        }
+        
+        .piece.w { color: var(--piece-white); text-shadow: 0 4px 5px rgba(0,0,0,0.3); }
+        .piece.b { color: var(--piece-black); text-shadow: 0 4px 5px rgba(0,0,0,0.5); }
+        .piece.moving { transform: scale(1.2); text-shadow: 0 15px 15px rgba(0,0,0,0.3); z-index: 100; }
+
+        /* --- TACTICAL HIGHLIGHTS --- */
+        .highlight-selected { background: var(--highlight-selected) !important; }
+        .highlight-move::before {
+            content: ''; position: absolute; width: 25%; height: 25%; border-radius: 50%; 
+            background: var(--highlight-move); pointer-events: none; z-index: 5;
+        }
+        .highlight-capture::before {
+            content: ''; position: absolute; width: 85%; height: 85%; border-radius: 50%; 
+            border: 5px solid var(--highlight-capture); box-sizing: border-box;
+            pointer-events: none; z-index: 5;
+        }
+
+        /* --- BLURRED GLASS OVERLAY MODALS --- */
+        .overlay { 
+            position: fixed; inset: 0; 
+            background: rgba(243, 244, 246, 0.2); 
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            z-index: 500; transition: opacity 0.4s ease, backdrop-filter 0.4s ease; 
+        }
+        
+        .overlay.hidden-screen { 
+            opacity: 0; pointer-events: none; 
+            backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px);
+        }
+        
+        .modal-panel {
+            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px);
+            padding: 45px 50px; border-radius: 24px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15), inset 0 2px 5px rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.6);
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            width: 90%; max-width: 400px;
+            transform: scale(1) translateY(0);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .hidden-screen .modal-panel { transform: scale(0.9) translateY(-20px); }
+
+        @media (max-width: 768px) {
+            header { width: 95%; padding: 12px 25px; margin: 15px auto 10px; border-radius: 30px; }
+            .header-logo { display: none; } 
+            .status-container { width: 100%; justify-content: space-between; gap: 10px;}
+            
+            main { flex-direction: column; padding: 5px 15px 20px;}
+            .board-wrapper { width: min(95vw, 60vh); height: min(95vw, 60vh); border-width: 4px;}
+            .graveyard { width: min(95vw, 60vh); height: auto; min-height: 60px; flex-direction: row; padding: 15px 20px; border-radius: 16px;}
+            .gy-title { margin-bottom: 0; margin-right: 20px; text-align: left; display: flex; align-items: center; line-height: 1.2;}
+            .gy-content { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; overflow-y: hidden;}
+            .gy-piece { font-size: 2.2rem; margin-left: -5px;}
+            
+            .modal-panel, .menu-card { padding: 35px 25px; width: 90vw; }
+            #gy-black { order: 1; }
+            #board    { order: 2; }
+            #gy-white { order: 3; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="screen-landing" class="screen">
+        <div class="hero-art">
+            <div class="hero-piece w">♞</div>
+            <div class="hero-piece b">♚</div>
+        </div>
+        <h1 class="landing-title">Classic Chess</h1>
+        <p class="landing-subtitle">The timeless game of strategy and intellect.</p>
+        
+        <div class="menu-card compact">
+            <button class="btn" onclick="openModeMenu()" style="justify-content: center; gap: 10px;">
+                <i data-lucide="play"></i> Start Game 
+            </button>
+        </div>
+    </div>
+
+    <div id="game-ui" class="d-none">
+        <header id="main-header">
+            <div class="header-logo">CHESS</div>
+            <div class="status-container">
+                <div class="stat-box">
+                    <span class="stat-label">Current Turn</span>
+                    <span class="stat-value" id="turn-display">White to Move</span>
+                </div>
+                <div class="stat-box" style="align-items: flex-start;">
+                    <span class="stat-label">Opponent</span>
+                    <span class="stat-value" id="mode-display">Waiting</span>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="graveyard" id="gy-white">
+                <div class="gy-title">White<br>Losses</div>
+                <div class="gy-content" id="gy-white-content"></div>
+            </div>
+
+            <div class="board-wrapper" id="board">
+                <div class="grid-layer" id="grid-layer"></div>
+                <div class="pieces-layer" id="pieces-layer"></div>
+            </div>
+
+            <div class="graveyard" id="gy-black">
+                <div class="gy-title">Black<br>Losses</div>
+                <div class="gy-content" id="gy-black-content"></div>
+            </div>
+
+            <div id="mode-menu-overlay" class="overlay hidden-screen">
+                <div class="modal-panel">
+                    <h2 class="landing-title" style="font-size: clamp(2rem, 6vw, 2.5rem); margin-bottom: 25px;">Select Mode</h2>
+                    
+                    <button class="btn" onclick="initGame('2p')">
+                        <span>Local 2-Player</span> <i data-lucide="users"></i>
+                    </button>
+                    
+                    <div class="divider"><span>Play against AI</span></div>
+                    
+                    <button class="btn btn-outline" onclick="initGame('cpu-easy')">
+                        <span>Difficulty: Easy</span> <i data-lucide="bot"></i>
+                    </button>
+                    <button class="btn btn-outline" onclick="initGame('cpu-med')">
+                        <span>Difficulty: Medium</span> <i data-lucide="bot"></i>
+                    </button>
+                    <button class="btn btn-outline" onclick="initGame('cpu-hard')" style="margin-bottom: 15px;">
+                        <span>Difficulty: Hard</span> <i data-lucide="bot"></i>
+                    </button>
+
+                    <button class="btn btn-outline" onclick="backToLanding()" style="margin-bottom: 0; justify-content: center; gap: 10px; border-color: transparent; background: transparent; box-shadow: none;">
+                        <i data-lucide="arrow-left"></i> Back
+                    </button>
+                </div>
+            </div>
+
+            <div id="win-menu-overlay" class="overlay hidden-screen">
+                <div class="modal-panel">
+                    <h1 class="landing-title" id="win-title" style="margin-bottom: 5px; font-size: clamp(2.5rem, 6vw, 3.5rem);">Checkmate</h1>
+                    <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 35px; font-weight: 600;">The game has ended.</p>
+                    <button class="btn" onclick="location.reload()" style="width: 100%; justify-content: center; gap: 12px; padding: 16px 40px; font-size: 1.1rem; margin-bottom: 0;">
+                        <i data-lucide="rotate-ccw"></i> Play Again
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+    lucide.createIcons();
+
+    const initialBoard = [
+        ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+        ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+        ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+    ];
+
+    const unicodePieces = { 'P': '♟', 'R': '♜', 'N': '♞', 'B': '♝', 'Q': '♛', 'K': '♚', 'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚' };
+
+    let board = [];
+    let visualPieces = []; 
+    let capturedWhite = []; 
+    let capturedBlack = []; 
+
+    let currentTurn = 'w'; 
+    let gameMode = '2p'; 
+    let selectedSquare = null;
+    let validMoves = [];
+    let isProcessing = true; // Lock interactions initially
+
+    const gridLayer = document.getElementById('grid-layer');
+    const piecesLayer = document.getElementById('pieces-layer');
+    let cellEls = [];
+    
+    // Build Grid cells
+    for(let r=0; r<8; r++) {
+        cellEls[r] = [];
+        for(let c=0; c<8; c++) {
+            let cell = document.createElement('div');
+            cell.className = `cell ${(r+c)%2 === 0 ? 'light' : 'dark'}`;
+            cell.onclick = () => handleCellClick(r, c);
+            gridLayer.appendChild(cell);
+            cellEls[r][c] = cell;
+        }
+    }
+
+    // Passively draws the pieces so they sit beautifully blurred in the background
+    function drawPassiveBoard() {
+        piecesLayer.innerHTML = '';
+        for(let r=0; r<8; r++) {
+            for(let c=0; c<8; c++) {
+                let char = initialBoard[r][c];
+                if(char) {
+                    let el = document.createElement('div');
+                    el.className = `piece ${isWhite(char) ? 'w' : 'b'}`;
+                    el.innerText = unicodePieces[char];
+                    el.style.left = `${c * 12.5}%`; 
+                    el.style.top = `${r * 12.5}%`;
+                    piecesLayer.appendChild(el);
+                }
+            }
+        }
+        document.getElementById('mode-display').innerText = 'Waiting';
+        document.getElementById('turn-display').innerText = 'White to Move';
+        capturedWhite = []; capturedBlack = [];
+        updateGraveyards();
+    }
+
+    // Sequence 1: Transition from Landing to the Blurred Game Board Modal
+    function openModeMenu() {
+        drawPassiveBoard(); 
+        
+        const landing = document.getElementById('screen-landing');
+        const gameUI = document.getElementById('game-ui');
+        const modeOverlay = document.getElementById('mode-menu-overlay');
+
+        landing.classList.add('hidden-screen');
+        
+        setTimeout(() => {
+            landing.classList.add('d-none');
+            gameUI.classList.remove('d-none');
+            
+            requestAnimationFrame(() => {
+                gameUI.style.opacity = '1';
+                modeOverlay.classList.remove('hidden-screen');
+            });
+        }, 500);
+    }
+
+    // Sequence (Optional): User clicks "Back" to return to landing page
+    function backToLanding() {
+        const landing = document.getElementById('screen-landing');
+        const gameUI = document.getElementById('game-ui');
+        const modeOverlay = document.getElementById('mode-menu-overlay');
+
+        modeOverlay.classList.add('hidden-screen');
+        gameUI.style.opacity = '0';
+        
+        setTimeout(() => {
+            gameUI.classList.add('d-none');
+            landing.classList.remove('d-none');
+            requestAnimationFrame(() => {
+                landing.classList.remove('hidden-screen');
+            });
+        }, 500);
+    }
+
+    // Sequence 2: Mode selected, close overlay, unblur board, start game
+    function initGame(mode) {
+        document.getElementById('mode-menu-overlay').classList.add('hidden-screen');
+
+        gameMode = mode;
+        board = initialBoard.map(row => [...row]);
+        currentTurn = 'w';
+        selectedSquare = null;
+        validMoves = [];
+        capturedWhite = [];
+        capturedBlack = [];
+        
+        let mDisp = mode === '2p' ? 'Player vs Player' : `Player vs CPU (${mode.split('-')[1]})`;
+        document.getElementById('mode-display').innerText = mDisp;
+        
+        // Re-draw pieces to reset classes and set logic correctly
+        piecesLayer.innerHTML = '';
+        visualPieces = [];
+        let idCounter = 0;
+        for(let r=0; r<8; r++) {
+            for(let c=0; c<8; c++) {
+                let char = board[r][c];
+                if(char) {
+                    let el = document.createElement('div');
+                    el.className = `piece ${isWhite(char) ? 'w' : 'b'}`;
+                    el.innerText = unicodePieces[char];
+                    el.style.left = `${c * 12.5}%`; 
+                    el.style.top = `${r * 12.5}%`;
+                    piecesLayer.appendChild(el);
+                    visualPieces.push({ id: idCounter++, char: char, r: r, c: c, el: el });
+                }
+            }
+        }
+        
+        updateGraveyards();
+        updateHighlights();
+        updateHUD();
+        
+        // Wait for the blur transition to finish before allowing gameplay clicks
+        setTimeout(() => { isProcessing = false; }, 500); 
+    }
+
+    function updateHighlights() {
+        for(let r=0; r<8; r++) {
+            for(let c=0; c<8; c++) {
+                cellEls[r][c].classList.remove('highlight-selected', 'highlight-move', 'highlight-capture');
+            }
+        }
+        
+        if(selectedSquare) cellEls[selectedSquare.r][selectedSquare.c].classList.add('highlight-selected');
+        
+        validMoves.forEach(move => {
+            let cell = cellEls[move.r][move.c];
+            if(board[move.r][move.c] !== '') cell.classList.add('highlight-capture');
+            else cell.classList.add('highlight-move');
+        });
+    }
+
+    function updateHUD() {
+        const turnDisp = document.getElementById('turn-display');
+        turnDisp.innerText = currentTurn === 'w' ? 'White to Move' : 'Black to Move';
+    }
+
+    function updateGraveyards() {
+        const gyWhite = document.getElementById('gy-white-content');
+        const gyBlack = document.getElementById('gy-black-content');
+        
+        gyWhite.innerHTML = ''; 
+        capturedWhite.forEach(char => {
+            let el = document.createElement('div');
+            el.className = 'gy-piece w'; el.innerText = unicodePieces[char];
+            gyWhite.appendChild(el);
+        });
+
+        gyBlack.innerHTML = ''; 
+        capturedBlack.forEach(char => {
+            let el = document.createElement('div');
+            el.className = 'gy-piece b'; el.innerText = unicodePieces[char];
+            gyBlack.appendChild(el);
+        });
+    }
+
+    function isWhite(piece) { return piece === piece.toUpperCase() && piece !== ''; }
+    function isBlack(piece) { return piece === piece.toLowerCase() && piece !== ''; }
+    function isEnemy(p1, p2) { if(!p1 || !p2) return false; return isWhite(p1) !== isWhite(p2); }
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+    function getValidMoves(r, c, stateBoard) {
+        let piece = stateBoard[r][c];
+        if(!piece) return [];
+        let moves = [];
+        let isW = isWhite(piece);
+        let pType = piece.toLowerCase();
+        let dir = isW ? -1 : 1;
+
+        function addIfValid(nr, nc, canCapture=true, mustCapture=false) {
+            if(nr < 0 || nr > 7 || nc < 0 || nc > 7) return false;
+            let target = stateBoard[nr][nc];
+            if(target === '') {
+                if(!mustCapture) moves.push({r: nr, c: nc});
+                return true; 
+            } else {
+                if(canCapture && isEnemy(piece, target)) moves.push({r: nr, c: nc});
+                return false; 
+            }
+        }
+
+        function slide(dr, dc) { let nr = r + dr, nc = c + dc; while(addIfValid(nr, nc)) { nr += dr; nc += dc; } }
+        if(pType === 'r' || pType === 'q') { slide(1,0); slide(-1,0); slide(0,1); slide(0,-1); }
+        if(pType === 'b' || pType === 'q') { slide(1,1); slide(1,-1); slide(-1,1); slide(-1,-1); }
+        if(pType === 'n') { const jumps = [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]]; jumps.forEach(j => addIfValid(r + j[0], c + j[1])); }
+        if(pType === 'k') { const steps = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]; steps.forEach(s => addIfValid(r + s[0], c + s[1])); }
+        
+        if(pType === 'p') {
+            if(addIfValid(r + dir, c, false, false)) {
+                let startRow = isW ? 6 : 1;
+                if(r === startRow) addIfValid(r + dir*2, c, false, false);
+            }
+            if(c > 0 && stateBoard[r+dir][c-1] !== '' && isEnemy(piece, stateBoard[r+dir][c-1])) addIfValid(r+dir, c-1, true, true);
+            if(c < 7 && stateBoard[r+dir][c+1] !== '' && isEnemy(piece, stateBoard[r+dir][c+1])) addIfValid(r+dir, c+1, true, true);
+        }
+        return moves;
+    }
+
+    function getAllMoves(color, stateBoard) {
+        let all = [];
+        for(let r=0; r<8; r++) {
+            for(let c=0; c<8; c++) {
+                let p = stateBoard[r][c];
+                if(p !== '' && ((color === 'w' && isWhite(p)) || (color === 'b' && isBlack(p)))) {
+                    let mvs = getValidMoves(r, c, stateBoard);
+                    mvs.forEach(m => all.push({from: {r,c}, to: m}));
+                }
+            }
+        }
+        return all;
+    }
+
+    async function handleCellClick(r, c) {
+        if(isProcessing) return;
+        if(gameMode.startsWith('cpu') && currentTurn === 'b') return; 
+
+        let move = validMoves.find(m => m.r === r && m.c === c);
+        if(selectedSquare && move) {
+            await executeMove(selectedSquare.r, selectedSquare.c, r, c);
+            return;
+        }
+
+        let piece = board[r][c];
+        if(piece && ((currentTurn === 'w' && isWhite(piece)) || (currentTurn === 'b' && isBlack(piece)))) {
+            selectedSquare = {r, c};
+            validMoves = getValidMoves(r, c, board);
+            updateHighlights();
+        } else {
+            selectedSquare = null;
+            validMoves = [];
+            updateHighlights();
+        }
+    }
+
+    async function executeMove(fr, fc, tr, tc) {
+        isProcessing = true;
+        let pieceChar = board[fr][fc];
+        let targetChar = board[tr][tc];
+
+        if(pieceChar.toLowerCase() === 'p') {
+            if((isWhite(pieceChar) && tr === 0) || (isBlack(pieceChar) && tr === 7)) {
+                pieceChar = isWhite(pieceChar) ? 'Q' : 'q'; 
+            }
+        }
+        board[tr][tc] = pieceChar;
+        board[fr][fc] = '';
+        selectedSquare = null;
+        validMoves = [];
+        updateHighlights();
+
+        let movingVis = visualPieces.find(p => p.r === fr && p.c === fc);
+        let targetVis = visualPieces.find(p => p.r === tr && p.c === tc);
+
+        movingVis.el.classList.add('moving');
+
+        movingVis.r = tr;
+        movingVis.c = tc;
+        movingVis.char = pieceChar;
+        movingVis.el.innerText = unicodePieces[pieceChar]; 
+        movingVis.el.style.left = `${tc * 12.5}%`;
+        movingVis.el.style.top = `${tr * 12.5}%`;
+
+        await sleep(300);
+        
+        movingVis.el.classList.remove('moving');
+
+        if(targetVis) {
+            targetVis.el.style.opacity = '0';
+            setTimeout(() => targetVis.el.remove(), 200);
+            visualPieces = visualPieces.filter(p => p.id !== targetVis.id);
+            
+            if (isWhite(targetChar)) capturedWhite.push(targetChar);
+            else capturedBlack.push(targetChar);
+            updateGraveyards();
+        }
+
+        if(targetChar && targetChar.toLowerCase() === 'k') {
+            setTimeout(() => {
+                document.getElementById('win-menu-overlay').classList.remove('hidden-screen');
+                let wTitle = document.getElementById('win-title');
+                wTitle.innerText = isWhite(pieceChar) ? "White Wins!" : "Black Wins!";
+            }, 300);
+            return; 
+        }
+
+        currentTurn = currentTurn === 'w' ? 'b' : 'w';
+        updateHUD();
+
+        if(gameMode.startsWith('cpu') && currentTurn === 'b') {
+            setTimeout(triggerCPU, 400); 
+        } else {
+            isProcessing = false;
+        }
+    }
+
+    function triggerCPU() {
+        let bestMove;
+        if (gameMode === 'cpu-easy') {
+            let moves = getAllMoves('b', board);
+            let captures = moves.filter(m => board[m.to.r][m.to.c] !== '');
+            bestMove = captures.length > 0 ? captures[Math.floor(Math.random() * captures.length)] : moves[Math.floor(Math.random() * moves.length)];
+        } 
+        else if (gameMode === 'cpu-med') { bestMove = getBestMove(board, 'b', 2); }
+        else if (gameMode === 'cpu-hard') { bestMove = getBestMove(board, 'b', 3); }
+
+        if(bestMove) executeMove(bestMove.from.r, bestMove.from.c, bestMove.to.r, bestMove.to.c);
+        else isProcessing = false; 
+    }
+
+    const pieceValues = { 'p': 10, 'n': 30, 'b': 30, 'r': 50, 'q': 90, 'k': 10000 };
+
+    function evaluateBoard(stateBoard) {
+        let score = 0;
+        for(let r=0; r<8; r++) {
+            for(let c=0; c<8; c++) {
+                let p = stateBoard[r][c];
+                if(p !== '') {
+                    let val = pieceValues[p.toLowerCase()];
+                    if (gameMode === 'cpu-hard') {
+                        let centerDist = Math.abs(r - 3.5) + Math.abs(c - 3.5);
+                        val += (10 - centerDist) * 0.1; 
+                    }
+                    if(isBlack(p)) score += val; else score -= val;
+                }
+            }
+        }
+        return score;
+    }
+
+    function getBestMove(stateBoard, color, depth) {
+        let moves = getAllMoves(color, stateBoard);
+        let bestVal = color === 'b' ? -Infinity : Infinity;
+        let bestMove = null;
+        moves.sort(() => Math.random() - 0.5);
+
+        for(let i=0; i<moves.length; i++) {
+            let move = moves[i];
+            let newBoard = stateBoard.map(row => [...row]);
+            newBoard[move.to.r][move.to.c] = newBoard[move.from.r][move.from.c];
+            newBoard[move.from.r][move.from.c] = '';
+
+            let val = minimax(newBoard, depth - 1, color === 'b' ? 'w' : 'b', -Infinity, Infinity);
+
+            if(color === 'b') { if(val > bestVal) { bestVal = val; bestMove = move; } } 
+            else { if(val < bestVal) { bestVal = val; bestMove = move; } }
+        }
+        return bestMove || moves[0];
+    }
+
+    function minimax(stateBoard, depth, color, alpha, beta) {
+        if(depth === 0) return evaluateBoard(stateBoard);
+
+        let bKing = false, wKing = false;
+        for(let r=0; r<8; r++) for(let c=0; c<8; c++) {
+            if(stateBoard[r][c] === 'k') bKing = true;
+            if(stateBoard[r][c] === 'K') wKing = true;
+        }
+        if(!bKing) return -10000; if(!wKing) return 10000;
+
+        let moves = getAllMoves(color, stateBoard);
+        if(moves.length === 0) return evaluateBoard(stateBoard);
+
+        if(color === 'b') {
+            let maxEval = -Infinity;
+            for(let move of moves) {
+                let newBoard = stateBoard.map(row => [...row]);
+                newBoard[move.to.r][move.to.c] = newBoard[move.from.r][move.from.c];
+                newBoard[move.from.r][move.from.c] = '';
+                
+                let ev = minimax(newBoard, depth - 1, 'w', alpha, beta);
+                maxEval = Math.max(maxEval, ev); alpha = Math.max(alpha, ev);
+                if(beta <= alpha) break;
+            }
+            return maxEval;
+        } else {
+            let minEval = Infinity;
+            for(let move of moves) {
+                let newBoard = stateBoard.map(row => [...row]);
+                newBoard[move.to.r][move.to.c] = newBoard[move.from.r][move.from.c];
+                newBoard[move.from.r][move.from.c] = '';
+                
+                let ev = minimax(newBoard, depth - 1, 'b', alpha, beta);
+                minEval = Math.min(minEval, ev); beta = Math.min(beta, ev);
+                if(beta <= alpha) break;
+            }
+            return minEval;
+        }
+    }
+</script>
+</body>
+</html>
