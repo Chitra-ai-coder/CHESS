@@ -251,7 +251,8 @@
         
         .hidden-screen .modal-panel { transform: scale(0.9) translateY(-20px); }
 
-         @media (max-width: 768px) {
+         
+       @media (max-width: 768px) {
             header { width: 95%; padding: 12px 25px; margin: 15px auto 10px; border-radius: 30px; }
             .header-logo { display: none; } 
             .status-container { width: 100%; justify-content: space-between; gap: 10px;}
@@ -261,9 +262,14 @@
             .graveyard { width: min(95vw, 60vh); height: auto; min-height: 60px; flex-direction: row; padding: 15px 20px; border-radius: 16px;}
             .gy-title { margin-bottom: 0; margin-right: 15px; text-align: left; display: flex; align-items: center; line-height: 1.2;}
             .gy-content { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; overflow-y: hidden;}
-            .gy-piece { font-size: 2.2rem; margin-left: -8px;}
+            
+            /* --- THE FIX IS HERE --- */
+            .gy-piece { font-size: 2.2rem; margin-left: -8px;} /* Squeezes them together */
+            .gy-piece:first-child { margin-left: 5px; } /* Safely pushes the FIRST piece away from the text */
             
             .modal-panel, .menu-card { padding: 35px 25px; width: 90vw; }
+            
+            /* Keeps Black on Top, White on Bottom */
             #gy-black { order: 1; }
             #board    { order: 2; }
             #gy-white { order: 3; }
